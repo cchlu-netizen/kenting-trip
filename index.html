@@ -129,9 +129,13 @@
     <small>手機 Google Maps App →「你的地點」→「地圖」也能叫出來導航</small>
     <hr style="border:none;border-top:1px solid rgba(255,255,255,.3);margin:16px 0 12px">
     <div style="font-weight:700">想把大家編好的最新行程更新到我的地圖？</div>
-    <button id="expBtn" onclick="exportCSV()" style="margin-top:10px;background:#fff;color:var(--grape);font-weight:800;border:none;padding:10px 22px;border-radius:24px;cursor:pointer">📥 產生最新地圖檔（CSV）</button>
-    <a href="https://www.google.com/maps/d/edit?mid=1NKhqhlUE0ry99sm78IFoy7S5NpcTE2U" target="_blank" style="background:rgba(255,255,255,.18);color:#fff;margin-top:10px">🗺️ 打開我的地圖去匯入</a>
-    <small>步驟：① 按上面下載 CSV ② 打開我的地圖 → 刪掉舊圖層 → 新增圖層 → 匯入這個 CSV ③ 定位欄選「地址」、標題欄選「名稱」<br>（日常導航其實用上面每個景點的「📍導航」按鈕就好，永遠是最新的，不一定要更新我的地圖）</small>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px">
+      <button id="expKml" onclick="exportKML()" style="background:#fff;color:var(--grape);font-weight:800;border:none;padding:10px 18px;border-radius:24px;cursor:pointer">📥 KML（每天自動分圖層·推薦）</button>
+      <button id="expBtn" onclick="exportCSV()" style="background:rgba(255,255,255,.18);color:#fff;font-weight:700;border:none;padding:10px 18px;border-radius:24px;cursor:pointer">📄 CSV</button>
+      <button id="copyBtn" onclick="copyTrip()" style="background:rgba(255,255,255,.18);color:#fff;font-weight:700;border:none;padding:10px 18px;border-radius:24px;cursor:pointer">📋 複製行程（貼LINE）</button>
+      <a href="https://www.google.com/maps/d/edit?mid=1NKhqhlUE0ry99sm78IFoy7S5NpcTE2U" target="_blank" style="background:rgba(255,255,255,.18);color:#fff;margin-top:0">🗺️ 打開我的地圖</a>
+    </div>
+    <small>更新地圖：① 按 <b>KML</b> 下載 ② 打開我的地圖 → 刪掉舊圖層 → 新增圖層 → 匯入 KML（每天自動一個圖層、免設定欄位）<br>（日常導航用上面每個景點的「📍導航」按鈕就好，永遠最新，不一定要更新我的地圖）</small>
   </div>
   <div class="block">
     <h2>🏨 住宿（3晚同一基地）</h2>
@@ -372,6 +376,51 @@ function exportCSV(){
   a.download="墾丁行程_最新_"+new Date().toISOString().slice(0,10)+".csv";
   document.body.appendChild(a);a.click();a.remove();
 }
+
+function sortedItems(){
+  return Object.values(ITEMS).filter(p=>p&&p.name)
+    .sort((a,b)=>(Number(a.d)-Number(b.d))||((a.o||0)-(b.o||0)));
+}
+function dl(name,text,mime){
+  const blob=new Blob(["﻿"+text],{type:mime+";charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+}
+// 匯出 KML：每天一個 Folder（My Maps 匯入後＝每天一個圖層），用 address 讓 Google 自動定位
+function exportKML(){
+  const xe=s=>String(s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let body="";
+  [1,2,3,4].forEach(dn=>{
+    const items=sortedItems().filter(p=>Number(p.d)===dn);
+    if(!items.length)return;
+    body+=`<Folder><name>Day${dn}</name>`;
+    items.forEach(p=>{
+      const desc=[p.time,TAGCN[p.tag]||"",p.feat,p.price].filter(Boolean).join(" ｜ ");
+      body+=`<Placemark><name>${xe(p.name)}</name><description>${xe(desc)}</description><address>${xe(p.q||p.name+" 墾丁")}</address></Placemark>`;
+    });
+    body+=`</Folder>`;
+  });
+  const kml=`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>墾丁四天三夜</name>${body}</Document></kml>`;
+  dl("墾丁四天三夜_最新.kml",kml,"application/vnd.google-earth.kml+xml");
+}
+// 一鍵複製行程文字（含地址，貼 LINE 群組用）
+function copyTrip(){
+  let t="🌴 墾丁四天三夜\n";
+  const route={1:"南下×車城",2:"墾丁南端",3:"西半線",4:"四重溪×回程"};
+  [1,2,3,4].forEach(dn=>{
+    const items=sortedItems().filter(p=>Number(p.d)===dn);
+    if(!items.length)return;
+    t+=`\n【Day${dn}｜${route[dn]}】\n`;
+    items.forEach(p=>{
+      t+=`${p.time||""} ${p.name}${p.price?"（"+p.price+"）":""}\n   📍 ${p.q||p.name}\n`;
+    });
+  });
+  t+="\n🗺️ 地圖：https://www.google.com/maps/d/viewer?mid=1NKhqhlUE0ry99sm78IFoy7S5NpcTE2U";
+  const done=()=>{const b=document.getElementById('copyBtn');const o=b.textContent;b.textContent="✅ 已複製！";setTimeout(()=>b.textContent=o,1800);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,()=>fallbackCopy(t,done));}
+  else fallbackCopy(t,done);
+}
+function fallbackCopy(t,cb){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb();}catch(e){alert("複製失敗，請手動選取");}ta.remove();}
 </script>
 </body>
 </html>
