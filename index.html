@@ -127,6 +127,11 @@
     <div>19 個景點＋美食都在裡面，可導航＆分享給隊友</div>
     <a href="https://www.google.com/maps/d/viewer?mid=1NKhqhlUE0ry99sm78IFoy7S5NpcTE2U" target="_blank">🚗 開啟我的地圖導航</a>
     <small>手機 Google Maps App →「你的地點」→「地圖」也能叫出來導航</small>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,.3);margin:16px 0 12px">
+    <div style="font-weight:700">想把大家編好的最新行程更新到我的地圖？</div>
+    <button id="expBtn" onclick="exportCSV()" style="margin-top:10px;background:#fff;color:var(--grape);font-weight:800;border:none;padding:10px 22px;border-radius:24px;cursor:pointer">📥 產生最新地圖檔（CSV）</button>
+    <a href="https://www.google.com/maps/d/edit?mid=1NKhqhlUE0ry99sm78IFoy7S5NpcTE2U" target="_blank" style="background:rgba(255,255,255,.18);color:#fff;margin-top:10px">🗺️ 打開我的地圖去匯入</a>
+    <small>步驟：① 按上面下載 CSV ② 打開我的地圖 → 刪掉舊圖層 → 新增圖層 → 匯入這個 CSV ③ 定位欄選「地址」、標題欄選「名稱」<br>（日常導航其實用上面每個景點的「📍導航」按鈕就好，永遠是最新的，不一定要更新我的地圖）</small>
   </div>
   <div class="block">
     <h2>🏨 住宿（3晚同一基地）</h2>
@@ -351,6 +356,21 @@ function saveItem(){
     ref.push(data);
   }
   closeModal();
+}
+
+// 匯出當下最新行程成 CSV（給 My Maps 匯入用）
+function exportCSV(){
+  const head=["名稱","地址","日期","類型","特色與必點","價位"];
+  const rows=Object.values(ITEMS).filter(p=>p&&p.name)
+    .sort((a,b)=>(Number(a.d)-Number(b.d))||((a.o||0)-(b.o||0)))
+    .map(p=>[p.name, p.q||(p.name+" 墾丁"), "Day"+p.d, (TAGCN[p.tag]||""), (p.feat||"").replace(/[\r\n]+/g," "), p.price||""]);
+  const all=[head,...rows];
+  const csv=all.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="墾丁行程_最新_"+new Date().toISOString().slice(0,10)+".csv";
+  document.body.appendChild(a);a.click();a.remove();
 }
 </script>
 </body>
