@@ -341,7 +341,8 @@ function saveItem(){
     q:fName.value.trim()+" 墾丁"
   };
   if(editKey){
-    data.q=ITEMS[editKey].q||data.q; // 編輯時保留原導航關鍵字
+    // 導航關鍵字跟著名字走：名字沒改就沿用原本（保留精準關鍵字），名字一改就用新名字
+    data.q=(data.name===ITEMS[editKey].name && ITEMS[editKey].q) ? ITEMS[editKey].q : data.name+" 墾丁";
     ref.child(editKey).update(data);
   }else{
     // 放到該天最後
