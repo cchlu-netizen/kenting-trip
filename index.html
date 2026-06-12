@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌴 墾丁四天三夜 · 家庭行程（即時同步）</title>
+<style>
+  :root{
+    --sea:#0a9396; --sea2:#94d2bd; --sand:#fff8ec; --coral:#ee6c4d; --ink:#1d3557;
+    --grape:#9b5de5; --line:#e6ddd0;
+    --tag-play:#0a9396; --tag-food:#ee6c4d; --tag-cafe:#9b5de5; --tag-stay:#2a9d8f; --tag-sweet:#f72585;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;background:linear-gradient(180deg,#e0f7fa 0%,var(--sand) 320px);color:var(--ink);line-height:1.6;padding-bottom:80px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 14px}
+  header{text-align:center;padding:30px 14px 14px}
+  header h1{font-size:2.1rem;letter-spacing:1px}
+  header .sub{color:#5a6c7d;margin-top:6px;font-size:1rem}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:20px;padding:5px 13px;font-size:.85rem;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .sync{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;padding:4px 12px;border-radius:20px;background:#fff;border:1px solid var(--line)}
+  .dot{width:9px;height:9px;border-radius:50%;background:#bbb}
+  .dot.on{background:#43aa8b} .dot.off{background:#e5707e}
+  .daynav{position:sticky;top:0;z-index:20;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:10px;background:rgba(255,248,236,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);margin-bottom:8px}
+  .daynav button{border:1.5px solid var(--sea2);background:#fff;color:var(--sea);font-weight:700;padding:7px 15px;border-radius:20px;cursor:pointer;font-size:.92rem}
+  .daynav button.on{background:var(--sea);color:#fff}
+  .day{margin:20px 0}
+  .day.hide{display:none}
+  .day-h{display:flex;align-items:center;gap:10px;margin:6px 4px 12px}
+  .day-h .badge{background:var(--sea);color:#fff;border-radius:12px;padding:4px 12px;font-weight:700}
+  .day-h h2{font-size:1.2rem}
+  .day-h .route{margin-left:auto;font-size:.78rem;color:#5a6c7d}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin:11px 0;box-shadow:0 2px 8px rgba(13,80,90,.06);position:relative}
+  .card.skip{opacity:.5;filter:grayscale(.6)}
+  .card .top{display:flex;align-items:flex-start;gap:10px}
+  .card .time{font-weight:800;color:var(--sea);min-width:52px;font-size:.95rem;padding-top:2px}
+  .card .body{flex:1;min-width:0}
+  .card h3{font-size:1.1rem;display:inline}
+  .tag{display:inline-block;font-size:.72rem;font-weight:700;color:#fff;border-radius:7px;padding:2px 8px;margin-left:7px;vertical-align:middle}
+  .t-play{background:var(--tag-play)} .t-food{background:var(--tag-food)} .t-cafe{background:var(--tag-cafe)} .t-stay{background:var(--tag-stay)} .t-sweet{background:var(--tag-sweet)}
+  .feat{margin-top:5px;color:#37474f;font-size:.93rem}
+  .pills{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+  .pill{font-size:.78rem;border-radius:8px;padding:3px 9px;background:#f1f5f4;border:1px solid #e0e8e6}
+  .pill.price{background:#fff4e6;border-color:#ffd8a8;color:#b5651d}
+  .pill.ac{background:#e3f2fd;border-color:#bbdefb;color:#1565c0}
+  .pill.park{background:#e8f5e9;border-color:#c8e6c9;color:#2e7d32}
+  .pill.drink{background:#f3e8ff;border-color:#e0c3fc;color:#7b2cbf}
+  .actions{margin-top:11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .mapbtn{display:inline-flex;align-items:center;gap:5px;text-decoration:none;background:var(--sea);color:#fff;font-size:.82rem;font-weight:700;padding:6px 12px;border-radius:9px;border:none;cursor:pointer}
+  .ghost{background:#fff;border:1px solid var(--line);color:#5a6c7d;font-size:.82rem;padding:6px 10px;border-radius:9px;cursor:pointer}
+  .vote{display:flex;gap:6px;margin-left:auto}
+  .vote button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.82rem}
+  .vote button.want.on{background:#d8f3dc;border-color:#52b788;color:#1b4332}
+  .vote button.skipb.on{background:#ffe5e5;border-color:#e5707e;color:#9d0208}
+  .note{margin-top:9px;width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;font-family:inherit;font-size:.88rem;resize:vertical;min-height:38px;background:#fffdf8}
+  .addbtn{display:block;width:100%;margin:8px 0 4px;border:2px dashed var(--sea2);background:#f4fbfa;color:var(--sea);font-weight:700;padding:11px;border-radius:14px;cursor:pointer;font-size:.95rem}
+  /* modal */
+  .mask{position:fixed;inset:0;background:rgba(20,40,50,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:14px}
+  .mask.show{display:flex}
+  .modal{background:#fff;border-radius:18px;padding:20px;width:100%;max-width:440px;max-height:90vh;overflow:auto}
+  .modal h3{margin-bottom:12px;color:var(--sea)}
+  .modal label{display:block;font-size:.82rem;color:#5a6c7d;margin:9px 0 3px}
+  .modal input,.modal select,.modal textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-family:inherit;font-size:.92rem}
+  .row2{display:flex;gap:10px}.row2>div{flex:1}
+  .chk{display:flex;gap:14px;margin-top:8px;font-size:.88rem}
+  .chk label{display:flex;align-items:center;gap:5px;margin:0}
+  .chk input{width:auto}
+  .mbtns{display:flex;gap:10px;margin-top:16px}
+  .mbtns button{flex:1;border:none;border-radius:10px;padding:11px;font-weight:700;cursor:pointer}
+  .save{background:var(--sea);color:#fff}.cancel{background:#eee;color:#555}
+  .block{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin:18px 0}
+  .block h2{font-size:1.15rem;margin-bottom:10px;color:var(--tag-stay)}
+  .block li{padding:6px 0;border-bottom:1px dashed var(--line);list-style:none}.block li:last-child{border:none}
+  .mapcta{text-align:center;background:linear-gradient(135deg,var(--sea),var(--grape));color:#fff;border-radius:16px;padding:22px;margin:18px 0}
+  .mapcta h2{color:#fff}
+  .mapcta a{display:inline-block;margin-top:10px;background:#fff;color:var(--sea);font-weight:800;text-decoration:none;padding:10px 22px;border-radius:24px}
+  .mapcta small{display:block;margin-top:10px;opacity:.88;font-size:.78rem}
+  footer{text-align:center;color:#8a99a8;font-size:.78rem;margin-top:26px;padding:0 14px}
+  .who{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:.85rem;z-index:30}
+  .who input{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-family:inherit;min-width:0}
+  /* 手機 RWD */
+  @media (max-width:560px){
+    header{padding:22px 12px 10px}
+    header h1{font-size:1.6rem}
+    header .sub{font-size:.9rem}
+    .daynav button{padding:6px 12px;font-size:.86rem}
+    .day-h{flex-wrap:wrap}
+    .day-h h2{font-size:1.05rem}
+    .day-h .route{margin-left:0;flex-basis:100%;margin-top:2px}
+    .card{padding:12px}
+    .card .time{min-width:46px;font-size:.9rem}
+    .card h3{font-size:1.02rem}
+    .actions{gap:7px}
+    .vote{margin-left:0;flex-basis:100%;justify-content:flex-start}
+    .vote button,.mapbtn,.ghost{flex:1;text-align:center;justify-content:center}
+    .modal{padding:16px;border-radius:14px}
+    .mapcta{padding:18px 14px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌴 墾丁四天三夜</h1>
+  <div class="sub">家庭討論版 · 即時同步 · 大家一起編 ✏️</div>
+  <div class="meta">
+    <span class="chip">🚗 平鎮出發</span>
+    <span class="chip">🏠 3晚住儷庭民宿</span>
+    <span class="chip">🧊 多冷氣室內</span>
+    <span class="chip">🌊 看海踏浪</span>
+    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">連線中…</span></span>
+  </div>
+</header>
+
+<div class="daynav">
+  <button data-d="1" class="on">Day 1</button>
+  <button data-d="2">Day 2</button>
+  <button data-d="3">Day 3</button>
+  <button data-d="4">Day 4</button>
+  <button data-d="all">全部</button>
+</div>
+
+<div class="wrap" id="app"></div>
+
+<div class="wrap">
+  <div class="mapcta">
+    <h2>🗺️ 開車導航地圖</h2>
+    <div>19 個景點＋美食都在裡面，可導航＆分享給隊友</div>
+    <a href="https://www.google.com/maps/d/viewer?mid=1NKhqhlUE0ry99sm78IFoy7S5NpcTE2U" target="_blank">🚗 開啟我的地圖導航</a>
+    <small>手機 Google Maps App →「你的地點」→「地圖」也能叫出來導航</small>
+  </div>
+  <div class="block">
+    <h2>🏨 住宿（3晚同一基地）</h2>
+    <ul>
+      <li><b>墾丁儷庭民宿</b> · 恆春鎮墾丁路330-2號</li>
+      <li>📍 墾丁大街旁（覓食方便）· 🅿️ 免費私人大停車場（新車好停）</li>
+      <li>⭐ Booking 9分 · 「CP值超高、俗又大碗」</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  資料來源：NotebookLM「墾丁旅遊必吃必玩攻略」＋網路評價整合 ·
+  所有變更會即時同步給打開這頁的家人
+</footer>
+
+<div class="who">
+  <span>👤 你是</span>
+  <input id="whoName" placeholder="輸入名字（備註會署名）">
+</div>
+
+<!-- 編輯/新增 視窗 -->
+<div class="mask" id="mask">
+  <div class="modal">
+    <h3 id="mTitle">新增行程</h3>
+    <div class="row2">
+      <div><label>哪一天</label>
+        <select id="fDay"><option value="1">Day 1</option><option value="2">Day 2</option><option value="3">Day 3</option><option value="4">Day 4</option></select></div>
+      <div><label>時間</label><input id="fTime" placeholder="例 14:00"></div>
+    </div>
+    <label>名稱</label><input id="fName" placeholder="景點／餐廳名稱">
+    <label>類型</label>
+    <select id="fTag"><option value="play">景點</option><option value="food">美食</option><option value="cafe">咖啡</option><option value="sweet">甜點</option><option value="stay">住宿</option></select>
+    <label>特色／必點（一句話）</label><textarea id="fFeat" rows="2" placeholder="特色、必點、為什麼選它"></textarea>
+    <label>價位</label><input id="fPrice" placeholder="例 全票450 / 人均300-400 / 免費">
+    <div class="chk">
+      <label><input type="checkbox" id="fAc">🧊冷氣</label>
+      <label><input type="checkbox" id="fPark">🅿️好停車</label>
+      <label><input type="checkbox" id="fDrink">🍶可下酒</label>
+    </div>
+    <div class="mbtns">
+      <button class="cancel" onclick="closeModal()">取消</button>
+      <button class="save" onclick="saveItem()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyANWORL9XLaoW9ncUj_Go44oiDJyEJJcqs",
+  authDomain:"fire-drill-pingzhen.firebaseapp.com",
+  databaseURL:"https://fire-drill-pingzhen-default-rtdb.firebaseio.com",
+  projectId:"fire-drill-pingzhen",
+  storageBucket:"fire-drill-pingzhen.firebasestorage.app",
+  messagingSenderId:"488420822527",
+  appId:"1:488420822527:web:a9a0fde305fc670932ebca"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+const ref=db.ref('trips/kenting/items');
+
+// 預設行程（第一次開啟時寫入 Firebase）
+const SEED=[
+ {o:1,d:1,time:"06:30",name:"平鎮出發",tag:"play",feat:"國道3號南下，單程約4.5–5小時",price:"",q:""},
+ {o:2,d:1,time:"11:00",name:"關廟服務區",tag:"food",feat:"國3最南服務區，順路不下交流道。土魠魚羹火雞肉飯、關廟麵、憨吉鍋燒",price:"銅板~百元",park:1,q:"關廟服務區 南向"},
+ {o:3,d:1,time:"16:00",name:"墾丁出火（出火特別景觀區）",tag:"play",feat:"恆春東門外100公尺，地底天然氣自然火焰、終年不息。傍晚看火光最明顯、晚上6點前免費；白天較曬建議短停",price:"6點前免費（停車50/時）",park:1,q:"出火特別景觀區 恆春"},
+ {o:4,d:1,time:"17:00",name:"入住 儷庭民宿",tag:"stay",feat:"墾丁大街旁、免費大停車場，放行李休息",price:"",park:1,q:"墾丁儷庭民宿"},
+ {o:5,d:1,time:"18:30",name:"甲紅居酒屋",tag:"food",feat:"三富酒店頂樓看夕陽。牛肋條串、肥美大香菇、烤飯糰、20+種梅酒",price:"低消一飲",drink:1,q:"甲紅居酒屋 恆春"},
+ {o:6,d:1,time:"20:30",name:"小嶼事義式冰淇淋",tag:"sweet",feat:"墾丁大街粉色摩洛哥風，義式冰淇淋 → 回民宿小酌",price:"約100-150",q:"小嶼事義式冰淇淋"},
+ {o:7,d:2,time:"09:00",name:"南灣遊憩區",tag:"play",feat:"看海踏浪、小峇里島，早上人少不久曬",price:"免費",q:"南灣遊憩區 墾丁"},
+ {o:8,d:2,time:"10:30",name:"逅灣咖啡",tag:"cafe",feat:"吹冷氣看海、不限時、甜點，避曬最佳",price:"150-250",ac:1,q:"逅灣咖啡 墾丁"},
+ {o:9,d:2,time:"12:30",name:"迷路小章魚餐酒館",tag:"food",feat:"南灣海景義式餐酒館，松露燉飯、油封鴨腿，可小酌",price:"人均600-800",drink:1,q:"迷路小章魚餐酒館"},
+ {o:10,d:2,time:"14:00",name:"回民宿休息避曬",tag:"stay",feat:"午後最曬，回民宿吹冷氣休息",price:"",ac:1,q:"墾丁儷庭民宿"},
+ {o:11,d:2,time:"16:30",name:"鵝鑾鼻燈塔",tag:"play",feat:"台灣最南地標，白塔配海景，傍晚不曬",price:"門票60·停車40",q:"鵝鑾鼻公園"},
+ {o:12,d:2,time:"17:30",name:"龍磐公園",tag:"play",feat:"免費崖海景、無光害，看夕陽星空（CNN推薦）",price:"免費",q:"龍磐公園"},
+ {o:13,d:2,time:"19:00",name:"六少爺海鮮燒烤",tag:"food",feat:"墾丁大街無煙燒烤，白飯吃到飽 → 民宿小酌",price:"平價",drink:1,q:"六少爺海鮮燒烤 墾丁"},
+ {o:14,d:3,time:"09:30",name:"台電南部展示館",tag:"play",feat:"後壁湖。室內冷氣、兩層旋轉溜滑梯、4D劇場，避暑神點",price:"免費",ac:1,park:1,q:"台電南部展示館"},
+ {o:15,d:3,time:"12:00",name:"邱家生魚片",tag:"food",feat:"後壁湖。200元40片超厚切，自家停車場，配熱炒下酒",price:"200元40片",drink:1,park:1,q:"邱家生魚片 後壁湖"},
+ {o:16,d:3,time:"13:30",name:"白砂灣",tag:"play",feat:"《海角七號》取景，貝殼沙灘看海踏浪（短暫停留）",price:"免費",q:"白砂灣 墾丁"},
+ {o:17,d:3,time:"14:30",name:"Oct.Sun／海龜咖啡",tag:"cafe",feat:"萬里桐漁村秘境海景，冷氣避曬，肉桂捲、可麗露",price:"100-160",ac:1,q:"Oct.Sun Coffee 萬里桐"},
+ {o:18,d:3,time:"16:30",name:"柯記綠豆饌",tag:"sweet",feat:"恆春老街銅板古早味甜點，消暑解膩（4.5★）",price:"一碗50元內",q:"柯記綠豆饌 恆春"},
+ {o:19,d:3,time:"17:00",name:"鹿境梅花鹿",tag:"play",feat:"恆春。零距離餵梅花鹿，4.8★破萬則，專屬停車",price:"門票約200",park:1,q:"鹿境梅花鹿生態園區"},
+ {o:20,d:3,time:"18:30",name:"山下人家熱炒",tag:"food",feat:"恆春平價熱炒，份量2倍。香滷豬腳、檸檬蛤蠣（要預約）→ 民宿小酌",price:"人均300-400",drink:1,park:1,q:"山下人家家常菜 恆春"},
+ {o:21,d:4,time:"09:30",name:"四重溪溫泉公園",tag:"play",feat:"車城。免費泡腳池、四大名泉、日式鳥居造景，順路北返",price:"免費",q:"四重溪溫泉公園"},
+ {o:22,d:4,time:"12:00",name:"車城／南州午餐 → 上國3北返",tag:"food",feat:"離開墾丁前最後一餐，接國道3號北返",price:"",q:"南州交流道"},
+ {o:23,d:4,time:"17:00",name:"關廟服務區 晚餐",tag:"food",feat:"回程順路晚餐，好停車",price:"銅板~百元",q:"關廟服務區"},
+ {o:24,d:4,time:"20:00",name:"抵達平鎮 🏡",tag:"play",feat:"平安到家，行程結束！",price:"",q:""}
+];
+const TAGCN={play:"景點",food:"美食",cafe:"咖啡",stay:"住宿",sweet:"甜點"};
+const titles={1:"南下 × 車城（室內海生館）",2:"墾丁南端（看海·海景咖啡·龍磐夕陽）",3:"西半線（室內·生魚片·白砂灣·恆春甜點）",4:"四重溪 × 回程"};
+const routes={1:"平鎮→車城→墾丁",2:"南灣→鵝鑾鼻→龍磐",3:"後壁湖→萬里桐→恆春",4:"車城→國道3號→平鎮"};
+
+let ITEMS={};           // {key:{...}}
+let curDay="1";
+let editKey=null;
+const app=document.getElementById('app');
+const whoInput=document.getElementById('whoName');
+whoInput.value=localStorage.getItem('who')||"";
+whoInput.oninput=()=>localStorage.setItem('who',whoInput.value);
+
+// 連線狀態
+db.ref('.info/connected').on('value',s=>{
+  const on=s.val()===true;
+  document.getElementById('dot').className="dot "+(on?"on":"off");
+  document.getElementById('syncTxt').textContent=on?"已即時同步":"離線（恢復後自動同步）";
+});
+
+// 第一次載入：若資料庫沒資料就寫入預設
+ref.once('value').then(snap=>{
+  if(!snap.exists()){
+    const init={};
+    SEED.forEach((it,i)=>init["seed"+String(i).padStart(2,'0')]=it);
+    ref.set(init);
+  }
+});
+
+// 監聽遠端變更 → 重新渲染
+ref.on('value',snap=>{ ITEMS=snap.val()||{}; render(); });
+
+function esc(s){return(s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function render(){
+  const focusKey=document.activeElement&&document.activeElement.classList.contains('note')?document.activeElement.dataset.k:null;
+  const focusPos=focusKey?document.activeElement.selectionStart:0;
+  app.innerHTML="";
+  [1,2,3,4].forEach(dn=>{
+    const wrap=document.createElement('div');
+    wrap.className="day d"+dn+(curDay!=="all"&&curDay!==String(dn)?" hide":"");
+    wrap.innerHTML=`<div class="day-h"><span class="badge">Day ${dn}</span><h2>${titles[dn]}</h2><span class="route">🧭 ${routes[dn]}</span></div>`;
+    Object.entries(ITEMS).filter(([k,p])=>Number(p.d)===dn)
+      .sort((a,b)=>(a[1].o||0)-(b[1].o||0))
+      .forEach(([k,p])=>wrap.appendChild(cardEl(k,p)));
+    const add=document.createElement('button');
+    add.className="addbtn";add.textContent="➕ 新增 Day "+dn+" 行程";
+    add.onclick=()=>openModal(null,dn);
+    wrap.appendChild(add);
+    app.appendChild(wrap);
+  });
+  if(focusKey){const t=app.querySelector('.note[data-k="'+focusKey+'"]');if(t){t.focus();try{t.setSelectionRange(focusPos,focusPos);}catch(e){}}}
+}
+
+function cardEl(k,p){
+  const c=document.createElement('div');
+  c.className="card"+(p.skip?" skip":"");
+  const pills=[];
+  if(p.price)pills.push(`<span class="pill price">💰${esc(p.price)}</span>`);
+  if(p.ac)pills.push(`<span class="pill ac">🧊冷氣</span>`);
+  if(p.park)pills.push(`<span class="pill park">🅿️好停車</span>`);
+  if(p.drink)pills.push(`<span class="pill drink">🍶可下酒</span>`);
+  const map=p.q?`<a class="mapbtn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.q)}">📍 導航</a>`:"";
+  c.innerHTML=`
+    <div class="top">
+      <div class="time">${esc(p.time)}</div>
+      <div class="body">
+        <h3>${esc(p.name)}</h3><span class="tag t-${p.tag}">${TAGCN[p.tag]||""}</span>
+        <div class="feat">${esc(p.feat)}</div>
+        <div class="pills">${pills.join("")}</div>
+        <div class="actions">
+          ${map}
+          <button class="ghost" data-edit="${k}">✏️ 編輯</button>
+          <button class="ghost" data-del="${k}">🗑️</button>
+          <div class="vote">
+            <button class="want ${p.want?"on":""}" data-want="${k}">👍 想去</button>
+            <button class="skipb ${p.skip?"on":""}" data-skip="${k}">⏭️ 跳過</button>
+          </div>
+        </div>
+        <textarea class="note" data-k="${k}" placeholder="家人備註…（會自動同步）">${esc(p.note)}</textarea>
+      </div>
+    </div>`;
+  c.querySelector('[data-edit]').onclick=()=>openModal(k);
+  c.querySelector('[data-del]').onclick=()=>{if(confirm("確定刪除「"+p.name+"」？"))ref.child(k).remove();};
+  c.querySelector('[data-want]').onclick=()=>ref.child(k).update({want:!p.want,skip:false});
+  c.querySelector('[data-skip]').onclick=()=>ref.child(k).update({skip:!p.skip,want:false});
+  const ta=c.querySelector('.note');
+  let tmr;
+  ta.oninput=()=>{clearTimeout(tmr);tmr=setTimeout(()=>{
+    const who=whoInput.value.trim();
+    ref.child(k).update({note:ta.value});
+  },450);};
+  return c;
+}
+
+// 分日切換
+document.querySelectorAll('.daynav button').forEach(b=>b.onclick=()=>{
+  curDay=b.dataset.d;
+  document.querySelectorAll('.daynav button').forEach(x=>x.classList.toggle('on',x===b));
+  render();
+});
+
+// 新增/編輯視窗
+const mask=document.getElementById('mask');
+function openModal(key,day){
+  editKey=key;
+  document.getElementById('mTitle').textContent=key?"編輯行程":"新增行程";
+  const p=key?ITEMS[key]:{d:day||1,time:"",name:"",tag:"play",feat:"",price:""};
+  fDay.value=p.d;fTime.value=p.time||"";fName.value=p.name||"";fTag.value=p.tag||"play";
+  fFeat.value=p.feat||"";fPrice.value=p.price||"";
+  fAc.checked=!!p.ac;fPark.checked=!!p.park;fDrink.checked=!!p.drink;
+  mask.classList.add('show');
+}
+function closeModal(){mask.classList.remove('show');editKey=null;}
+mask.onclick=e=>{if(e.target===mask)closeModal();};
+function saveItem(){
+  if(!fName.value.trim()){alert("請填名稱");return;}
+  const d=Number(fDay.value);
+  const data={
+    d, time:fTime.value.trim(), name:fName.value.trim(), tag:fTag.value,
+    feat:fFeat.value.trim(), price:fPrice.value.trim(),
+    ac:fAc.checked?1:null, park:fPark.checked?1:null, drink:fDrink.checked?1:null,
+    q:fName.value.trim()+" 墾丁"
+  };
+  if(editKey){
+    data.q=ITEMS[editKey].q||data.q; // 編輯時保留原導航關鍵字
+    ref.child(editKey).update(data);
+  }else{
+    // 放到該天最後
+    const maxO=Math.max(0,...Object.values(ITEMS).filter(x=>Number(x.d)===d).map(x=>x.o||0));
+    data.o=maxO+1;
+    ref.push(data);
+  }
+  closeModal();
+}
+</script>
+</body>
+</html>
