@@ -130,12 +130,12 @@
     <hr style="border:none;border-top:1px solid rgba(255,255,255,.3);margin:16px 0 12px">
     <div style="font-weight:700">想把大家編好的最新行程更新到我的地圖？</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px">
-      <button id="expBtn" onclick="exportCSV()" style="background:#fff;color:var(--grape);font-weight:800;border:none;padding:10px 18px;border-radius:24px;cursor:pointer">📥 CSV（推薦·已驗證）</button>
-      <button id="expKml" onclick="exportKML()" style="background:rgba(255,255,255,.18);color:#fff;font-weight:700;border:none;padding:10px 18px;border-radius:24px;cursor:pointer">🧪 KML（自動分圖層）</button>
+      <button id="expKml" onclick="exportKML()" style="background:#fff;color:var(--grape);font-weight:800;border:none;padding:10px 18px;border-radius:24px;cursor:pointer">📥 KML（帶座標·每天分圖層）</button>
+      <button id="expBtn" onclick="exportCSV()" style="background:rgba(255,255,255,.18);color:#fff;font-weight:700;border:none;padding:10px 18px;border-radius:24px;cursor:pointer">📄 CSV</button>
       <button id="copyBtn" onclick="copyTrip()" style="background:rgba(255,255,255,.18);color:#fff;font-weight:700;border:none;padding:10px 18px;border-radius:24px;cursor:pointer">📋 複製行程（貼LINE）</button>
       <a href="https://www.google.com/maps/d/edit?mid=1NKhqhlUE0ry99sm78IFoy7S5NpcTE2U" target="_blank" style="background:rgba(255,255,255,.18);color:#fff;margin-top:0">🗺️ 打開我的地圖</a>
     </div>
-    <small>更新地圖：① 按 <b>CSV</b> 下載 ② 打開我的地圖 → 刪舊圖層 → 新增圖層 → 匯入 → 定位欄選「地址」、標題選「名稱」<br>🧪 KML 可試：匯入時每天自動分一個圖層、免設定欄位；若有點沒定位就改用 CSV。<br>（日常導航用每個景點的「📍導航」按鈕就好，永遠最新，不一定要更新我的地圖）</small>
+    <small>更新地圖：① 按 <b>KML</b> 下載 ② 打開我的地圖 → 刪舊圖層 → 新增圖層 → 匯入 KML（每天自動一個圖層、免設定欄位、多數點已帶精準座標）<br>（少數小店用地址定位；日常導航用每個景點的「📍導航」按鈕最準，不一定要更新我的地圖）</small>
   </div>
   <div class="block">
     <h2>🏨 住宿（3晚同一基地）</h2>
@@ -352,6 +352,7 @@ function saveItem(){
   if(editKey){
     // 導航關鍵字跟著名字走：名字沒改就沿用原本（保留精準關鍵字），名字一改就用新名字
     data.q=(data.name===ITEMS[editKey].name && ITEMS[editKey].q) ? ITEMS[editKey].q : data.name+" 墾丁";
+    if(data.name!==ITEMS[editKey].name){ data.lat=null; data.lng=null; } // 改名後舊座標失效，改用地址定位
     ref.child(editKey).update(data);
   }else{
     // 放到該天最後
@@ -392,13 +393,16 @@ function exportKML(){
   let body="";
   [1,2,3,4].forEach(dn=>{
     const items=sortedItems().filter(p=>Number(p.d)===dn);
-    if(!items.length)return;
-    body+=`<Folder><name>Day${dn}</name>`;
+    let pms="";
     items.forEach(p=>{
+      const hasGeo=(p.lat!=null&&p.lng!=null&&p.lat!==""&&p.lng!=="");
+      const loc=hasGeo ? `<Point><coordinates>${p.lng},${p.lat},0</coordinates></Point>`
+                       : (p.q ? `<address>${xe(p.q)}</address>` : "");
+      if(!loc)return; // 出發/抵達等非地點不放進地圖
       const desc=[p.time,TAGCN[p.tag]||"",p.feat,p.price].filter(Boolean).join(" ｜ ");
-      body+=`<Placemark><name>${xe(p.name)}</name><description>${xe(desc)}</description><address>${xe(p.q||p.name+" 墾丁")}</address></Placemark>`;
+      pms+=`<Placemark><name>${xe(p.name)}</name><description>${xe(desc)}</description>${loc}</Placemark>`;
     });
-    body+=`</Folder>`;
+    if(pms)body+=`<Folder><name>Day${dn}</name>${pms}</Folder>`;
   });
   const kml=`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>墾丁四天三夜</name>${body}</Document></kml>`;
   dl("墾丁四天三夜_最新.kml",kml,"application/vnd.google-earth.kml+xml");

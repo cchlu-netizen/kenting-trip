@@ -1,0 +1,194 @@
+﻿[
+    {
+        "key":  "seed00",
+        "name":  "平鎮出發",
+        "q":  "平鎮出發",
+        "lat":  23.5957073,
+        "lng":  120.4549068,
+        "inTW":  true
+    },
+    {
+        "key":  "seed01",
+        "name":  "關廟服務區",
+        "q":  "關廟服務區 南向",
+        "lat":  22.9294774,
+        "lng":  120.3525599,
+        "inTW":  true
+    },
+    {
+        "key":  "seed02",
+        "name":  "墾丁出火（出火特別景觀區）",
+        "q":  "出火特別景觀區 恆春",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed03",
+        "name":  "入住 儷庭民宿",
+        "q":  "墾丁儷庭民宿",
+        "lat":  21.9469327,
+        "lng":  120.7921696,
+        "inTW":  true
+    },
+    {
+        "key":  "seed04",
+        "name":  "甲紅居酒屋",
+        "q":  "甲紅居酒屋 恆春",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed05",
+        "name":  "小嶼事義式冰淇淋",
+        "q":  "小嶼事義式冰淇淋",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed06",
+        "name":  "南灣遊憩區",
+        "q":  "南灣遊憩區 墾丁",
+        "lat":  21.9598393,
+        "lng":  120.7630178,
+        "inTW":  true
+    },
+    {
+        "key":  "seed07",
+        "name":  "逅灣咖啡",
+        "q":  "逅灣咖啡 墾丁",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed08",
+        "name":  "迷路小章魚餐酒館",
+        "q":  "迷路小章魚餐酒館",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed09",
+        "name":  "回民宿休息避曬",
+        "q":  "墾丁儷庭民宿",
+        "lat":  21.9469327,
+        "lng":  120.7921696,
+        "inTW":  true
+    },
+    {
+        "key":  "seed10",
+        "name":  "鵝鑾鼻燈塔",
+        "q":  "鵝鑾鼻公園",
+        "lat":  21.9041525,
+        "lng":  120.8506909,
+        "inTW":  true
+    },
+    {
+        "key":  "seed11",
+        "name":  "龍磐公園",
+        "q":  "龍磐公園",
+        "lat":  21.9278015,
+        "lng":  120.8469736,
+        "inTW":  true
+    },
+    {
+        "key":  "seed12",
+        "name":  "六少爺海鮮燒烤",
+        "q":  "六少爺海鮮燒烤 墾丁",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed13",
+        "name":  "台電南部展示館",
+        "q":  "台電南部展示館",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed14",
+        "name":  "邱家生魚片",
+        "q":  "邱家生魚片 後壁湖",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed15",
+        "name":  "白砂灣",
+        "q":  "白砂灣 墾丁",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed16",
+        "name":  "Oct.Sun／海龜咖啡",
+        "q":  "Oct.Sun Coffee 萬里桐",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed17",
+        "name":  "柯記綠豆饌",
+        "q":  "柯記綠豆饌 恆春",
+        "lat":  22.003186,
+        "lng":  120.743525,
+        "inTW":  true
+    },
+    {
+        "key":  "seed18",
+        "name":  "鹿境梅花鹿",
+        "q":  "鹿境梅花鹿生態園區",
+        "lat":  22.0124457,
+        "lng":  120.7416999,
+        "inTW":  true
+    },
+    {
+        "key":  "seed19",
+        "name":  "山下人家熱炒",
+        "q":  "山下人家家常菜 恆春",
+        "lat":  null,
+        "lng":  null,
+        "inTW":  false
+    },
+    {
+        "key":  "seed20",
+        "name":  "四重溪溫泉公園",
+        "q":  "四重溪溫泉公園",
+        "lat":  22.0938291,
+        "lng":  120.7466386,
+        "inTW":  true
+    },
+    {
+        "key":  "seed21",
+        "name":  "車城／南州午餐 → 上國3北返",
+        "q":  "南州交流道",
+        "lat":  22.4951841,
+        "lng":  120.5280588,
+        "inTW":  true
+    },
+    {
+        "key":  "seed22",
+        "name":  "關廟服務區 晚餐",
+        "q":  "關廟服務區",
+        "lat":  22.9262921,
+        "lng":  120.3511738,
+        "inTW":  true
+    },
+    {
+        "key":  "seed23",
+        "name":  "抵達平鎮 🏡",
+        "q":  "抵達平鎮 🏡",
+        "lat":  25.1671857,
+        "lng":  121.6332406,
+        "inTW":  true
+    }
+]
