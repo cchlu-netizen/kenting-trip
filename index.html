@@ -352,8 +352,12 @@ function esc(s){return(s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':
 function tmin(p){const m=String(p&&p.time||"").match(/(\d{1,2})\s*[:：.]\s*(\d{1,2})/);return m?(+m[1])*60+(+m[2]):(100000+(Number(p&&p.o)||0));}
 
 function render(){
-  const focusKey=document.activeElement&&document.activeElement.classList.contains('note')?document.activeElement.dataset.k:null;
-  const focusPos=focusKey?document.activeElement.selectionStart:0;
+  const ae=document.activeElement;
+  const isNote=ae&&ae.classList&&ae.classList.contains('note');
+  const focusKey=isNote?ae.dataset.k:null;
+  const focusPos=isNote?ae.selectionStart:0;
+  const focusVal=isNote?ae.value:null;   // 保留正在打、還沒存進 Firebase 的字
+  const sy=window.scrollY;               // 保留捲動位置，避免重繪時畫面亂跳
   app.innerHTML="";
   [1,2,3,4].forEach(dn=>{
     const wrap=document.createElement('div');
@@ -368,7 +372,8 @@ function render(){
     wrap.appendChild(add);
     app.appendChild(wrap);
   });
-  if(focusKey){const t=app.querySelector('.note[data-k="'+focusKey+'"]');if(t){t.focus();try{t.setSelectionRange(focusPos,focusPos);}catch(e){}}}
+  if(focusKey){const t=app.querySelector('.note[data-k="'+focusKey+'"]');if(t){if(focusVal!=null)t.value=focusVal;try{t.focus({preventScroll:true});}catch(e){t.focus();}try{t.setSelectionRange(focusPos,focusPos);}catch(e){}}}
+  window.scrollTo(0,sy);
 }
 
 function cardEl(k,p){
