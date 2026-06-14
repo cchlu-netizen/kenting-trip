@@ -391,7 +391,6 @@ function cardEl(k,p){
           ${map}
           <button class="ghost" data-edit="${k}">✏️ 編輯</button>
           <div class="vote">
-            <button class="want ${p.want?"on":""}" data-want="${k}">👍 想去</button>
             <button class="skipb" data-del="${k}">🗑️ 刪除</button>
           </div>
         </div>
@@ -400,7 +399,6 @@ function cardEl(k,p){
     </div>`;
   c.querySelector('[data-edit]').onclick=()=>openModal(k);
   c.querySelector('[data-del]').onclick=()=>{if(confirm("確定刪除「"+p.name+"」？整筆會從行程移除"))ref.child(k).remove();};
-  c.querySelector('[data-want]').onclick=()=>ref.child(k).update({want:!p.want});
   const ta=c.querySelector('.note');
   let tmr;
   ta.oninput=()=>{clearTimeout(tmr);tmr=setTimeout(()=>{
