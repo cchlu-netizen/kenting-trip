@@ -62,6 +62,16 @@
   .modal label{display:block;font-size:.82rem;color:#5a6c7d;margin:9px 0 3px}
   .modal input,.modal select,.modal textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;font-family:inherit;font-size:.92rem}
   .row2{display:flex;gap:10px}.row2>div{flex:1}
+  /* 智慧建議清單 */
+  .suggbox{margin-top:6px;display:none;flex-direction:column;border:1px solid var(--sea2);border-radius:11px;overflow:hidden;box-shadow:0 3px 10px rgba(13,80,90,.1)}
+  .suggbox.show{display:flex}
+  .suggbox .sghd{background:var(--sea);color:#fff;font-size:.78rem;font-weight:700;padding:7px 11px}
+  .suggbox .sg{text-align:left;background:#f9fdfc;border:none;border-bottom:1px solid var(--line);padding:9px 11px;cursor:pointer;font-family:inherit;font-size:.9rem;color:var(--ink)}
+  .suggbox .sg:last-child{border-bottom:none}
+  .suggbox .sg:hover{background:#e0f2f1}
+  .suggbox .sg .nm{font-weight:700}
+  .suggbox .sg .rk{display:inline-block;background:var(--coral);color:#fff;border-radius:6px;font-size:.72rem;padding:1px 6px;margin-right:6px;vertical-align:middle}
+  .suggbox .sg .meta{display:block;font-size:.77rem;color:#5a6c7d;margin-top:3px;line-height:1.45}
   .chk{display:flex;gap:14px;margin-top:8px;font-size:.88rem}
   .chk label{display:flex;align-items:center;gap:5px;margin:0}
   .chk input{width:auto}
@@ -166,7 +176,9 @@
         <select id="fDay"><option value="1">Day 1</option><option value="2">Day 2</option><option value="3">Day 3</option><option value="4">Day 4</option></select></div>
       <div><label>時間</label><input id="fTime" placeholder="例 14:00"></div>
     </div>
-    <label>名稱</label><input id="fName" placeholder="景點／餐廳名稱">
+    <label>名稱 <span style="color:var(--sea);font-weight:700">（打類別會跳建議，例：卡丁車）</span></label>
+    <input id="fName" placeholder="景點／餐廳名稱，或打類別找建議" autocomplete="off">
+    <div class="suggbox" id="suggBox"></div>
     <label>類型</label>
     <select id="fTag"><option value="play">景點</option><option value="food">美食</option><option value="cafe">咖啡</option><option value="sweet">甜點</option><option value="stay">住宿</option></select>
     <label>特色／必點（一句話）</label><textarea id="fFeat" rows="2" placeholder="特色、必點、為什麼選它"></textarea>
@@ -225,6 +237,18 @@ const SEED=[
  {o:22,d:4,time:"12:00",name:"車城／南州午餐 → 上國3北返",tag:"food",feat:"離開墾丁前最後一餐，接國道3號北返",price:"",q:"南州交流道"},
  {o:23,d:4,time:"17:00",name:"關廟服務區 晚餐",tag:"food",feat:"回程順路晚餐，好停車",price:"銅板~百元",q:"關廟服務區"},
  {o:24,d:4,time:"20:00",name:"抵達平鎮 🏡",tag:"play",feat:"平安到家，行程結束！",price:"",q:""}
+];
+// 🔍 墾丁精選建議資料庫：在「新增」視窗名稱欄打類別關鍵字 → 跳出選項 → 點一下自動帶入
+// 之後想加新類別，照同格式往陣列裡加一組就好
+const SUGGEST=[
+ {keys:["卡丁車","賽車","賽車場","甩尾","甩尾車","gokart","go kart","go car"], cat:"卡丁車",
+  opts:[
+   {name:"墾丁恐龍賽車場",tag:"play",feat:"恆春路上最大賽車場，恐龍主題賽道＋瑪莉歐甩尾車＋水彈對戰，刺激與親子都適合，五星評價最多",price:"雙人甩尾車約230、卡丁車約300-400/場(10分)",park:1},
+   {name:"海角賽車樂園",tag:"play",feat:"墾丁最長跑道＋4D賽道，義大利進口車、單圈計時，有270CC單人車",price:"約300-500/場",park:1},
+   {name:"炫風方程式賽車場",tag:"play",feat:"單／雙人300cc動力強，老闆懂車車況保養佳，免費招待清涼飲料",price:"約300-400/場",park:1},
+   {name:"勁風 瘋狂甩尾車場(墾丁分店)",tag:"play",feat:"甩尾車＋卡丁車＋水槍戰，親子族群取向",price:"約250-350/場",park:1},
+   {name:"喜哈哈 PK玩家F1賽車場",tag:"play",feat:"F1風格賽道，在地老牌、團體包場方便",price:"場次制約300/場",park:1}
+  ]}
 ];
 const TAGCN={play:"景點",food:"美食",cafe:"咖啡",stay:"住宿",sweet:"甜點"};
 const titles={1:"南下 × 車城（室內海生館）",2:"墾丁南端（看海·海景咖啡·龍磐夕陽）",3:"西半線（室內·生魚片·白砂灣·恆春甜點）",4:"四重溪 × 回程"};
@@ -338,7 +362,32 @@ function openModal(key,day){
   fAc.checked=!!p.ac;fPark.checked=!!p.park;fDrink.checked=!!p.drink;
   mask.classList.add('show');
 }
-function closeModal(){mask.classList.remove('show');editKey=null;}
+function closeModal(){mask.classList.remove('show');editKey=null;hideSugg();}
+
+// 🔍 自動建議：打類別關鍵字 → 跳選單；點一下自動帶入其他欄位
+const suggBox=document.getElementById('suggBox');
+function hideSugg(){suggBox.classList.remove('show');suggBox.innerHTML="";}
+function renderSugg(){
+  const q=(fName.value||"").trim().toLowerCase();
+  if(!q){hideSugg();return;}
+  const hit=SUGGEST.find(s=>s.keys.some(k=>q.includes(k.toLowerCase())));
+  if(!hit){hideSugg();return;}
+  let html=`<div class="sghd">🏁 ${hit.cat}・由高到低，點一下自動帶入</div>`;
+  hit.opts.forEach((o,i)=>{
+    const tags=[o.ac?"🧊冷氣":"",o.park?"🅿️好停車":"",o.drink?"🍶可下酒":""].filter(Boolean).join("・");
+    html+=`<button type="button" class="sg" data-i="${i}"><span class="rk">${i+1}</span><span class="nm">${esc(o.name)}</span><span class="meta">${esc(o.feat)}<br>💰${esc(o.price)}${tags?" ｜ "+tags:""}</span></button>`;
+  });
+  suggBox.innerHTML=html;
+  suggBox.classList.add('show');
+  suggBox.querySelectorAll('.sg').forEach(b=>b.onclick=()=>pickSugg(hit.opts[+b.dataset.i]));
+}
+function pickSugg(o){
+  fName.value=o.name; fTag.value=o.tag||"play";
+  fFeat.value=o.feat||""; fPrice.value=o.price||"";
+  fAc.checked=!!o.ac; fPark.checked=!!o.park; fDrink.checked=!!o.drink;
+  hideSugg();
+}
+fName.addEventListener('input',renderSugg);
 mask.onclick=e=>{if(e.target===mask)closeModal();};
 function saveItem(){
   if(!fName.value.trim()){alert("請填名稱");return;}
