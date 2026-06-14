@@ -348,6 +348,8 @@ ref.once('value').then(snap=>{
 ref.on('value',snap=>{ ITEMS=snap.val()||{}; render(); });
 
 function esc(s){return(s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+// 把時間字串("HH:MM"/"6:30")換算成分鐘，用來排序；沒填時間的排在最後(依原順序)
+function tmin(p){const m=String(p&&p.time||"").match(/(\d{1,2})\s*[:：.]\s*(\d{1,2})/);return m?(+m[1])*60+(+m[2]):(100000+(Number(p&&p.o)||0));}
 
 function render(){
   const focusKey=document.activeElement&&document.activeElement.classList.contains('note')?document.activeElement.dataset.k:null;
@@ -358,7 +360,7 @@ function render(){
     wrap.className="day d"+dn+(curDay!=="all"&&curDay!==String(dn)?" hide":"");
     wrap.innerHTML=`<div class="day-h"><span class="badge">Day ${dn}</span><h2>${titles[dn]}</h2><span class="route">🧭 ${routes[dn]}</span></div>`;
     Object.entries(ITEMS).filter(([k,p])=>Number(p.d)===dn)
-      .sort((a,b)=>(a[1].o||0)-(b[1].o||0))
+      .sort((a,b)=>tmin(a[1])-tmin(b[1]))
       .forEach(([k,p])=>wrap.appendChild(cardEl(k,p)));
     const add=document.createElement('button');
     add.className="addbtn";add.textContent="➕ 新增 Day "+dn+" 行程";
@@ -480,7 +482,7 @@ function saveItem(){
 function exportCSV(){
   const head=["名稱","地址","日期","類型","特色與必點","價位"];
   const rows=Object.values(ITEMS).filter(p=>p&&p.name)
-    .sort((a,b)=>(Number(a.d)-Number(b.d))||((a.o||0)-(b.o||0)))
+    .sort((a,b)=>(Number(a.d)-Number(b.d))||(tmin(a)-tmin(b)))
     .map(p=>[p.name, p.q||(p.name+" 墾丁"), "Day"+p.d, (TAGCN[p.tag]||""), (p.feat||"").replace(/[\r\n]+/g," "), p.price||""]);
   const all=[head,...rows];
   const csv=all.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\r\n");
@@ -493,7 +495,7 @@ function exportCSV(){
 
 function sortedItems(){
   return Object.values(ITEMS).filter(p=>p&&p.name)
-    .sort((a,b)=>(Number(a.d)-Number(b.d))||((a.o||0)-(b.o||0)));
+    .sort((a,b)=>(Number(a.d)-Number(b.d))||(tmin(a)-tmin(b)));
 }
 function dl(name,text,mime){
   const blob=new Blob(["﻿"+text],{type:mime+";charset=utf-8"});
